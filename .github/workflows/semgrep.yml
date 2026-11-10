@@ -1,39 +1,27 @@
-name: Análisis SAST con Semgrep
-
-on:
-  push:
-    branches: [ "main", "master" ]
-  pull_request:
-    branches: [ "main", "master" ]
+name: Semgrep SAST
+on: [push, pull_request]
 
 jobs:
-  analisis_seguridad:
-    name: Escaneo de código en /retext
+  semgrep-scan:
     runs-on: ubuntu-latest
-
+    permissions:
+      security-events: write
+      actions: read
+      contents: read
+    
     steps:
-      # 1. Clonar el repositorio usando un hash SHA seguro (Equivalente a v4)
-      - name: Obtener el código fuente
-        uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608 
+      - name: Checkout del código
+        uses: actions/checkout@v4
 
-      # 2. Instalar la herramienta Semgrep mediante pip
       - name: Instalar Semgrep
-        run: python -m pip install --upgrade semgrep
+        run: python -m pip install semgrep
 
-      # 3. Ejecutar Semgrep SOLO en la carpeta 'retext' y generar el reporte JSON
-      - name: Ejecutar análisis y generar métricas
-        run: |
-          semgrep scan \
-            --config "p/default" \
-            --json \
-            --output reporte_sast.json \
-            retext/
-            
-      # 4. Subir el reporte como un artefacto de GitHub (Equivalente a v4)
-      # Esto te permite descargar el reporte_sast.json desde la pestaña "Actions"
-      - name: Subir reporte de resultados
-        uses: actions/upload-artifact@5d5d22a31266ced268874388b861e4b58bb5c2f3
-        if: always() # Asegura que el reporte se suba incluso si Semgrep encuentra vulnerabilidades y falla el paso anterior
+      - name: Ejecutar Semgrep y generar SARIF
+        # Ajusta "--config auto" si usas un archivo de reglas específico
+        run: semgrep scan --config auto --sarif > semgrep-results.sarif
+        continue-on-error: true # Evita que el pipeline falle inmediatamente para poder subir el reporte
+
+      - name: Subir resultados a GitHub Code Scanning
+        uses: github/codeql-action/upload-sarif@v3
         with:
-          name: metricas-semgrep-retext
-          path: reporte_sast.json
+          sarif_file: semgrep-results.sarif
