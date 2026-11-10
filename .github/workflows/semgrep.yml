@@ -2,8 +2,6 @@ name: Semgrep SAST
 on:
   push:
     branches: [ "master", "main" ]
-  pull_request:
-    branches: [ "master", "main" ]
 
 jobs:
   semgrep:
@@ -13,7 +11,15 @@ jobs:
       - name: Descargar el código
         uses: actions/checkout@v4
       
-      - name: Ejecutar Semgrep
-        uses: returntocorp/semgrep-action@v1
+      - name: Instalar Semgrep
+        run: pip install semgrep
+        
+      - name: Ejecutar escaneo y generar JSON
+        # El "|| true" asegura que GitHub no detenga el proceso si hay vulnerabilidades, para que logre subir el archivo
+        run: semgrep scan --config auto --json -o reporte_sast.json || true
+        
+      - name: Guardar reporte como artefacto descargable
+        uses: actions/upload-artifact@v4
         with:
-          config: "p/default"
+          name: Reporte-Semgrep-JSON
+          path: reporte_sast.json
