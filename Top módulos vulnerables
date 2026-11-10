@@ -1,5 +1,0 @@
-webenginepreview.py: renderiza HTML no confiable en QtWebEngine. Riesgo: XSS y lectura de file://.
-preview.py: Python-Markdown deja pasar HTML crudo, y el JS de sincronización podría recibir contenido sin escapar.
-converterprocess.py: docutils permite include (lee archivos locales) y raw (inyecta HTML), salvo que ReText los desactive.
-window.py: abre enlaces con QDesktopServices y escribe archivos. Riesgo: URIs peligrosas o escrituras indebidas.
-tab.py: recarga cambios externos y resuelve rutas relativas. Riesgo: leer archivos de terceros.
